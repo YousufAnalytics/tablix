@@ -1,4 +1,42 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useDrag } from "react-dnd";
+
+
+const DraggableField = ({ field, type, isDimension }: { field: string; type: string; isDimension: boolean }) => {
+    const [{ isDragging }, drag] = useDrag(() => ({
+      type,
+      item: { field },
+      collect: (monitor) => ({
+        isDragging: monitor.isDragging(),
+      }),
+    }));
+  
+    const ref = useRef<HTMLLIElement>(null);
+  
+    // Connect drag source safely
+    useEffect(() => {
+      if (ref.current) {
+        drag(ref.current);
+      }
+    }, [drag]);
+  
+    return (
+      <li
+        ref={ref} // ✅ Pure ref now, no TypeScript complaints
+        className={`p-2 px-4 rounded-full cursor-pointer text-sm font-medium shadow-sm hover:shadow transition duration-200 ${
+          isDimension
+            ? "bg-red-50 text-red-700 hover:bg-red-100"
+            : "bg-green-50 text-green-700 hover:bg-green-100"
+        }`}
+        style={{
+          opacity: isDragging ? 0.5 : 0.85,
+        }}
+      >
+        {field}
+      </li>
+    );
+  };
+  
 
 const Sidebar = () => {
   const dimensions = ["Region", "Country", "Category", "Sub-Category"];
@@ -30,22 +68,18 @@ const Sidebar = () => {
       {/* Fields */}
       <ul className="space-y-3 flex-1 overflow-y-auto">
         {fields.map((field) => (
-          <li
-            key={field}
-            draggable
-            className={`p-2 px-4 rounded-full cursor-pointer text-sm font-medium shadow-sm hover:shadow transition duration-200 ${
-              activeTab === "Dimensions"
-                ? "bg-red-50 text-red-700 hover:bg-red-100"
-                : "bg-green-50 text-green-700 hover:bg-green-100"
-            }`}
-            style={{ opacity: 0.85 }}
-          >
-            {field}
-          </li>
+          <DraggableField
+          key={field}
+          field={field}
+          type="FIELD"
+          isDimension={activeTab === "Dimensions"}
+        />
         ))}
       </ul>
     </div>
   );
 };
+
+
 
 export default Sidebar;
